@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const fs = require("fs").promises;
 const path = require("path");
 const cors = require("cors");
 
@@ -7,19 +8,40 @@ const app = express();
 const port = 3000;
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.static("public"));
 
-let latestDistance = null;
+// Read data from db.json
+async function readData() {
+  try {
+    const data = await fs.readFile("db.json", "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    return { distances: [] };
+  }
+}
 
-app.post("/distance", (req, res) => {
-  latestDistance = parseInt(req.body.distance);
-  console.log(`Received distance: ${latestDistance} cm`);
+// Write data to db.json
+async function writeData(data) {
+  await fs.writeFile("db.json", JSON.stringify(data, null, 2));
+}
+
+// Endpoint to receive distance data from ESP8266
+app.post("/distance", async (req, res) => {
+  const { distance } = req.body;
+  const data = await readData();
+  data.distances.push({ distance, timestamp: new Date().toISOString() });
+  await writeData(data);
   res.sendStatus(200);
 });
 
-app.get("/latest-distance", (req, res) => {
-  res.json({ distance: latestDistance });
+// Endpoint to get the latest distance
+app.get("/latest-distance", async (req, res) => {
+  const data = await readData();
+  const latestDistance = data.distances[data.distances.length - 1] || {
+    distance: null,
+  };
+  res.json(latestDistance);
 });
 
 app.get("/", (req, res) => {
