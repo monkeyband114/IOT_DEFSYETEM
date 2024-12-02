@@ -1,3 +1,13 @@
+let vibrationEnabled = false;
+
+document
+  .getElementById("enableNotifications")
+  .addEventListener("click", function () {
+    vibrationEnabled = true;
+    this.textContent = "Notifications Enabled";
+    this.disabled = true;
+  });
+
 function checkDistance() {
   fetch("/latest-distance")
     .then((response) => response.json())
@@ -7,8 +17,10 @@ function checkDistance() {
         if (data.distance <= 70) {
           alertElement.textContent = `Alert! Object detected at ${data.distance} cm`;
           alertElement.className = "danger";
-          // Trigger vibration if supported
-          navigator.vibrate(3000);
+          // Trigger vibration if supported and enabled
+          if (vibrationEnabled && "vibrate" in navigator) {
+            navigator.vibrate([200, 100, 200]);
+          }
         } else {
           alertElement.textContent = `Safe. No object detected within 70 cm. Current distance: ${data.distance} cm`;
           alertElement.className = "safe";
