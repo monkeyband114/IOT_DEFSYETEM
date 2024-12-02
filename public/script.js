@@ -8,9 +8,7 @@ function checkDistance() {
           alertElement.textContent = `Alert! Object detected at ${data.distance} cm`;
           alertElement.className = "danger";
           // Trigger vibration if supported
-          if ("vibrate" in navigator) {
-            navigator.vibrate([200, 100, 200]);
-          }
+          navigator.vibrate(3000);
         } else {
           alertElement.textContent = `Safe. No object detected within 70 cm. Current distance: ${data.distance} cm`;
           alertElement.className = "safe";
